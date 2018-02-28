@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: memsql
-# Recipe:: default
+# Recipe:: master_install
 #
 # Copyright 2015, Jonathan Klinginsmith
 #
@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 include_recipe 's3_file'
 
 memsql_version = node['memsql']['version']
