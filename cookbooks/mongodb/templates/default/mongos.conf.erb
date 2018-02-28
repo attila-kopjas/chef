@@ -1,9 +1,0 @@
-systemLog:
-    destination: file
-    path: "<%= File.join(@log_dir, "mongos.log") %>"
-    logAppend: true
-processManagement:
-    fork: true
-    pidFilePath: "<%= File.join(@run_dir, "mongos.pid") %>"
-sharding:
-    configDB: "<%= @config_servers %>"
