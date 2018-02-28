@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include_recipe 's3_file'
+#include_recipe 's3_file'
 
 memsql_version = node['memsql']['version']
 memsql_download_url = node['memsql']['download_url']
