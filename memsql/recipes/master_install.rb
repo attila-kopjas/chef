@@ -2,7 +2,6 @@
 # Cookbook Name:: memsql
 # Recipe:: master_install
 #
-# Copyright 2015, Jonathan Klinginsmith
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,54 +19,58 @@
 #include_recipe 's3_file'
 
 memsql_version = node['memsql']['version']
-memsql_download_url = node['memsql']['download_url']
-memsql_download_dir = node['memsql']['download_dir']
-memsql_checksum = node['memsql']['checksum']
-memsql_bin_download_url = node['memsql']['bin_download_url']
-memsql_bin_checksum = node['memsql']['bin_checksum']
+memsql_ops_file_name = node['memsql']['ops-file-name']
+memsql_bin_file_name = node['memsql']['bin-file-name']
 
+memsql_ops_download_url = node['memsql']['ops-s3-path']  
+memsql_bin_download_url = node['memsql']['bin-s3-path']
 
-directory '/tmp/aen' do
+directory '/tmp/memsql' do
   owner 'root'
   group 'root'
   mode '0755'
   recursive true
   #action :nothing
-  #notifies :delete, 'directory[/tmp/aen]' # at the end of the recipe
+  #notifies :delete, 'directory[/tmp/memsql]' # at the end of the recipe
 end
 
-s3_file "/tmp/aen/#{node['aen']['aen-gateway-file-name']}" do
-  remote_path node['aen']['aen-gateway-s3-path']
-  mode '0744'
-  #action :nothing
+execute 'download-memsql-packages' do
+  cwd '/tmp/memsql'
+  user "root"
+  action :run
+  command "aws s3 cp #{node['memsql']['ops-s3-path']} . && \
+    aws s3 cp #{node['memsql']['bin-file-name']} . && \
+    chmod '0644' #{node['memsql']['ops-file-name']} #{node['memsql']['bin-file-name']} && \
+    touch /tmp/memsql_pkg_dl_ok"
+  #notifies :run, "execute[install-aen-prereq-packages]", :immediately
+  not_if { ::File.exist?("/tmp/memsql_pkg_dl_ok") }
 end
 
 
-remote_file "#{memsql_download_dir}/memsql-ops-#{memsql_version}.tar.gz" do
-  source memsql_download_url
-  mode '0644'
-  checksum memsql_checksum
-end
+# Sample for the chef resource of s3_file 
+# s3_file "/tmp/aen/#{node['memsql']['bin-file-name']}" do
+  # remote_path node['memsql']['bin-s3-path']
+  # mode '0644'
+  # #action :nothing
+# end
 
-execute 'untar memsql tarball' do
-  command "tar -xzf memsql-ops-#{memsql_version}.tar.gz"
-  cwd memsql_download_dir
-  creates "#{memsql_download_dir}/memsql-ops-#{memsql_version}"
-end
 
-execute 'install memsql' do
-  command './install.sh -n'
-  cwd "#{memsql_download_dir}/memsql-ops-#{memsql_version}"
-  creates '/usr/bin/memsql-ops'
-end
+#----------- a tobbi majd kesobb kerul tesztelesre
 
-remote_file "#{memsql_download_dir}/memsqlbin_amd64.tar.gz" do
-  source memsql_bin_download_url
-  mode '0644'
-  checksum memsql_bin_checksum
-end
+# execute 'untar memsql tarball' do
+  # cwd '/tmp/memsql'
+  # command "tar -xzf #{node['memsql']['bin-file-name']}"
+  # creates "/tmp/memsql/memsql-ops-#{memsql_version}"
+# end
 
-execute 'add memsql to agent' do
-  command "memsql-ops file-add -t memsql #{memsql_download_dir}/memsqlbin_amd64.tar.gz"
-  not_if 'memsql-ops file-list -t memsql | grep -q MEMSQL'
-end
+# execute 'install memsql' do
+  # command './install.sh -n'
+  # cwd "/tmp/memsql/memsql-ops-#{memsql_version}"
+  # creates '/usr/bin/memsql-ops'
+# end
+
+
+# execute 'add memsql to agent' do
+  # command "memsql-ops file-add -t memsql /tmp/memsql/memsqlbin_amd64.tar.gz"
+  # not_if 'memsql-ops file-list -t memsql | grep -q MEMSQL'
+# end
