@@ -18,12 +18,7 @@
 
 #include_recipe 's3_file'
 
-# memsql_version = node['memsql']['version']
-# memsql_ops_file_name = node['memsql']['ops-file-name']
-# memsql_bin_file_name = node['memsql']['bin-file-name']
 
-# memsql_ops_download_url = node['memsql']['ops-s3-path']
-# memsql_bin_download_url = node['memsql']['bin-s3-path']
 
 directory '/tmp/memsql' do
   owner 'root'
@@ -41,43 +36,48 @@ execute 'download-memsql-packages' do
     aws s3 cp #{node['memsql']['bin-s3-path']} . && \
     chmod '0644' #{node['memsql']['ops-file-name']} #{node['memsql']['bin-file-name']} && \
     touch /tmp/memsql/memsql_pkg_dl_ok"
-  #notifies :run, "execute[install-aen-prereq-packages]", :immediately
+  #notifies :run, "execute[install-prereq-packages]", :immediately
   not_if { ::File.exist?("/tmp/memsql/memsql_pkg_dl_ok") }
 end
 
-
 # Sample for using the s3_file resource
-# s3_file "/tmp/memsql/#{node['memsql']['bin-file-name']}" do
+# s3_file "/tmp/aen/#{node['memsql']['bin-file-name']}" do
   # remote_path node['memsql']['bin-s3-path']
   # mode '0644'
+  # #action :nothing
 # end
 
 
- execute 'untar memsql-bin tarball' do
-   cwd '/tmp/memsql'
-   command "tar -xzf #{node['memsql']['bin-file-name']}"
-   creates '/tmp/memsql/memsqlbin'
- end
-
-  execute 'untar memsql-ops tarball' do
+ execute 'untar memsql-ops tarball' do
    cwd '/tmp/memsql'
    command "tar -xzf #{node['memsql']['ops-file-name']}"
    creates "/tmp/memsql/memsql-ops-#{memsql_version}"
  end
 
- execute 'install memsql' do
+
+execute 'install memsql' do
    cwd "/tmp/memsql/memsql-ops-#{memsql_version}"
-   command './install.sh -n'
+   command './install.sh --ignore-min-requirements -n'
    creates '/usr/bin/memsql-ops'
  end
 
 
-# execute 'add memsql to agent' do
-  # command "memsql-ops file-add -t memsql /tmp/memsql/memsqlbin_amd64.tar.gz"
-  # not_if 'memsql-ops file-list -t memsql | grep -q MEMSQL'
-# end
+ execute 'add memsql to agent' do
+   command "memsql-ops file-add -t memsql /tmp/memsql/memsqlbin_amd64.tar.gz"
+   not_if 'memsql-ops file-list -t memsql | grep -q MEMSQL'
+ end
 
 
+template '/var/lib/memsql/master-3306*/memsql.cnf' do
+  source 'memsql_server_config.erb'
+  owner 'memsql'
+  group 'memsql'
+  mode '0644'
+end
 
- 
+ execute 'add master agent and start' do
+   command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | awk 'NR==2 { print $1}') -r master"
+   not_if 'memsql-ops file-list -t memsql | grep -q MEMSQL'
+ end
+
 

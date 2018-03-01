@@ -1,0 +1,26 @@
+; ------------------------------------------------------------------------
+; THIS CONFIGURATION FILE IS MANAGED BY MEMSQL OPS
+; MemSQL Ops controls the data in this file.  Please be careful
+; when editing it.
+; For more information, see our documentation at https://docs.memsql.com
+; ------------------------------------------------------------------------
+[server]
+basedir = .
+bind_address = 0.0.0.0
+core_file
+default_partitions_per_leaf = 8
+lc_messages_dir = ./share
+lock_wait_timeout = 60
+snapshot_trigger_size = 256m
+socket = memsql.sock
+tmpdir = .
+transaction_buffer = 64m
+minimum_core_count = 1
+minimum_memory_mb = 3
+; ------------------------------------------------------------------------
+; MEMSQL OPS VARIABLES
+;
+; Variables below this header are controlled by MemSQL Ops.
+; Please do not edit any of these values directly.
+; ------------------------------------------------------------------------
+port = 3306
