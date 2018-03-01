@@ -68,7 +68,7 @@ execute 'install memsql' do
  end
 
 
-template '/var/lib/memsql/master-3306*/memsql.cnf' do
+template "/var/lib/memsql/master-3306*/memsql.cnf" do
   source 'memsql_server_config.erb'
   owner 'memsql'
   group 'memsql'
