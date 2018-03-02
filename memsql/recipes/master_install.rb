@@ -51,12 +51,12 @@ end
  execute 'untar memsql-ops tarball' do
    cwd '/tmp/memsql'
    command "tar -xzf #{node['memsql']['ops-file-name']}"
-   creates "/tmp/memsql/memsql-ops-#{memsql_version}"
+   creates "/tmp/memsql/memsql-ops-#{node['memsql']['version']}"
  end
 
 
 execute 'install memsql' do
-   cwd "/tmp/memsql/memsql-ops-#{memsql_version}"
+   cwd "/tmp/memsql/memsql-ops-#{node['memsql']['version']}"
    command './install.sh --ignore-min-requirements -n'
    creates '/usr/bin/memsql-ops'
  end
@@ -68,16 +68,25 @@ execute 'install memsql' do
  end
 
 
-template "/var/lib/memsql/master-3306*/memsql.cnf" do
+ execute 'add master agent and start' do
+   command "echo | memsql-ops memsql-deploy --settings-file /var/lib/memsql/memsql.cnf -a $(memsql-ops agent-list | awk 'NR==2 { print $1}') -r master; true"
+   not_if 'memsql-ops memsql-list | grep MASTER'
+  end
+
+
+ template 'change config file' do
   source 'memsql_server_config.erb'
   owner 'memsql'
   group 'memsql'
   mode '0644'
+  #path lazy { "/var/lib/memsql/#{`ls /var/lib/memsql | grep master|tr -d '\n'`}/memsql.cnf" }
+  path lazy { "#{Dir['/var/lib/memsql/*master*'].first}/memsql.cnf" }
+  #not_if ''
 end
 
- execute 'add master agent and start' do
-   command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | awk 'NR==2 { print $1}') -r master"
-   not_if 'memsql-ops file-list -t memsql | grep -q MEMSQL'
+ execute 'restarts memsql' do
+   command "memsql-ops memsql-restart --all"
+   not_if 'memsql-ops memsql-list |grep MASTER |grep -v "NOT RUNNING"'
  end
 
-
+ 
