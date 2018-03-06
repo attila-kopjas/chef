@@ -69,7 +69,8 @@ execute 'install memsql' do
 
 
  execute 'add master agent and start' do
-   command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | awk 'NR==2 { print $1}') -r master; true"
+   command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | awk 'NR==2 { print $1}') -r master"
+   ignore_failure true
    not_if 'memsql-ops memsql-list | grep MASTER'
   end
 
