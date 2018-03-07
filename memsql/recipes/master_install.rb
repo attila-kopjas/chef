@@ -98,21 +98,18 @@ end
 # LEAF config
 
 
- template 'create ssh key' do
-  source "#{node['rsa_id']}"
+file '/var/lib/memsql-ops/id_rsa' do
+  content node['rsa_id']
+  mode '0600'
   owner 'memsql'
   group 'memsql'
-  mode '0600'
-  path "/var/lib/memsql-ops/id_rsa"
-  #not_if { ::File.exist?("/var/lib/memsql-ops/id_rsa") }
-end 
-    
+end
 
   
- # execute 'agent deploy into leaf' do
-   # command "memsql-ops agent-deploy -h #{node['leaf_ip']} -i /var/lib/memsql-ops/id_rsa -u ec2-user --allow-no-sudo"
-   # #not_if 'memsql-ops memsql-list | grep LEAF'
-  # end
+ execute 'agent deploy into leaf' do
+    command "memsql-ops agent-deploy -h #{node['leaf_ip']} -i /var/lib/memsql-ops/id_rsa -u ec2-user --allow-no-sudo"
+    #not_if 'memsql-ops memsql-list | grep LEAF'
+ end
  
 
  # execute 'add leaf agent and start' do
