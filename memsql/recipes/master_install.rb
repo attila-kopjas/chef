@@ -98,33 +98,44 @@ end
 # LEAF config
 
 
- execute 'agent deploy into leaf' do
-   command "memsql-ops agent-deploy -h #{node['leaf_ip']} -i #{node['rsa_id']} -u ec2-user --allow-no-sudo"
-   #not_if 'memsql-ops memsql-list | grep LEAF'
-  end
- 
-
- execute 'add leaf agent and start' do
-   command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | awk 'NR==2 { print $1}') -r leaf"
-   ignore_failure true
-   not_if 'memsql-ops memsql-list | grep LEAF'
-  end
-
-#remote!!!
- template 'change config file' do
-  source 'memsql_server_config.erb'
+ template 'create ssh key' do
+  source "#{node['rsa_id']}"
   owner 'memsql'
   group 'memsql'
-  mode '0644'
-  #path lazy { "/var/lib/memsql/#{`ls /var/lib/memsql | grep leaf|tr -d '\n'`}/memsql.cnf" }
-  path lazy { "#{Dir['/var/lib/memsql/*leaf*'].first}/memsql.cnf" }
-  #not_if ''
-end
+  mode '0600'
+  path "/var/lib/memsql-ops/id_rsa"
+  #not_if { ::File.exist?("/var/lib/memsql-ops/id_rsa") }
+end 
+    
 
- execute 'restarts memsql' do
-   command "memsql-ops memsql-restart --all"
-   not_if 'memsql-ops memsql-list |grep LEAF |grep -v "NOT RUNNING"'
- end
+  
+ # execute 'agent deploy into leaf' do
+   # command "memsql-ops agent-deploy -h #{node['leaf_ip']} -i /var/lib/memsql-ops/id_rsa -u ec2-user --allow-no-sudo"
+   # #not_if 'memsql-ops memsql-list | grep LEAF'
+  # end
+ 
+
+ # execute 'add leaf agent and start' do
+   # command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | awk 'NR==2 { print $1}') -r leaf"
+   # ignore_failure true
+   # not_if 'memsql-ops memsql-list | grep LEAF'
+  # end
+
+# #remote!!!
+ # template 'change config file' do
+  # source 'memsql_server_config.erb'
+  # owner 'memsql'
+  # group 'memsql'
+  # mode '0644'
+  # #path lazy { "/var/lib/memsql/#{`ls /var/lib/memsql | grep leaf|tr -d '\n'`}/memsql.cnf" }
+  # path lazy { "#{Dir['/var/lib/memsql/*leaf*'].first}/memsql.cnf" }
+  # #not_if ''
+# end
+
+ # execute 'restarts memsql' do
+   # command "memsql-ops memsql-restart --all"
+   # not_if 'memsql-ops memsql-list |grep LEAF |grep -v "NOT RUNNING"'
+ # end
 
  
  
