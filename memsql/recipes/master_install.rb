@@ -103,20 +103,22 @@ file '/var/lib/memsql-ops/id_rsa' do
   mode '0600'
   owner 'memsql'
   group 'memsql'
+  not_if { ::File.exist?("/var/lib/memsql-ops/id_rsa") }
 end
 
-  
+
  execute 'agent deploy into leaf' do
     command "memsql-ops agent-deploy -h #{node['leaf_ip']} -i /var/lib/memsql-ops/id_rsa -u ec2-user --allow-no-sudo"
-    #not_if 'memsql-ops memsql-list | grep LEAF'
+    not_if 'memsql-ops agent-list | grep FOLLOWER'
  end
- 
 
- # execute 'add leaf agent and start' do
-   # command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | awk 'NR==2 { print $1}') -r leaf"
-   # ignore_failure true
-   # not_if 'memsql-ops memsql-list | grep LEAF'
-  # end
+
+  execute 'add leaf agent and start' do
+    command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | grep FOLLOWER | awk 'NR==1 { print $1}') -r leaf"
+    ignore_failure true
+    not_if 'memsql-ops memsql-list | grep LEAF'
+  end
+
 
 # #remote!!!
  # template 'change config file' do
