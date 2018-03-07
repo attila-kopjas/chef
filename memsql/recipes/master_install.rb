@@ -9,24 +9,6 @@
 #sudo opsworks-agent-cli get_json -i
 #Chef::Log.info("*** The leaf IP is '#{node['leaf_ip']}' ***")
 
-
-# user "#{node['memsql']['srvc-acct']}" do
-  # group node['memsql']['srvc-grp']
-  # password node['memsql']['srvc-pass']
-  # shell '/bin/bash'
-  # manage_home true
-# end
-
-
-directory '/tmp/memsql' do
-  owner 'root'
-  group 'root'
-  mode '0755'
-  recursive true
-  #action :nothing
-end
-
-
 group "#{node['memsql']['srvc-grp']}"
 
 user "#{node['memsql']['srvc-acct']}" do
@@ -34,6 +16,19 @@ user "#{node['memsql']['srvc-acct']}" do
   password node['memsql']['srvc-pass']
   shell '/bin/bash'
   manage_home true
+end
+
+
+Chef::Log.warn("******* The master IP is '#{node['leaf_ip']}' *******")
+#Chef::Log.info("******* Info The master IP is '#{node['leaf_ip']}' *******")
+Chef::Log.warn("******* RSA ID is '#{node['rsa_id']}' *******")
+
+directory '/tmp/memsql' do
+  owner 'root'
+  group 'root'
+  mode '0755'
+  recursive true
+  #action :nothing
 end
 
 
@@ -98,4 +93,39 @@ end
    command "memsql-ops memsql-restart --all"
    not_if 'memsql-ops memsql-list |grep MASTER |grep -v "NOT RUNNING"'
  end
+ 
+ 
+# LEAF config
+
+
+ execute 'agent deploy into leaf' do
+   command "memsql-ops agent-deploy -h #{node['leaf_ip']} -i #{node['rsa_id']} -u ec2-user --allow-no-sudo"
+   #not_if 'memsql-ops memsql-list | grep LEAF'
+  end
+ 
+
+ execute 'add leaf agent and start' do
+   command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | awk 'NR==2 { print $1}') -r leaf"
+   ignore_failure true
+   not_if 'memsql-ops memsql-list | grep LEAF'
+  end
+
+#remote!!!
+ template 'change config file' do
+  source 'memsql_server_config.erb'
+  owner 'memsql'
+  group 'memsql'
+  mode '0644'
+  #path lazy { "/var/lib/memsql/#{`ls /var/lib/memsql | grep leaf|tr -d '\n'`}/memsql.cnf" }
+  path lazy { "#{Dir['/var/lib/memsql/*leaf*'].first}/memsql.cnf" }
+  #not_if ''
+end
+
+ execute 'restarts memsql' do
+   command "memsql-ops memsql-restart --all"
+   not_if 'memsql-ops memsql-list |grep LEAF |grep -v "NOT RUNNING"'
+ end
+
+ 
+ 
  
