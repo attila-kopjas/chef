@@ -10,12 +10,12 @@
 #Chef::Log.info("*** The leaf IP is '#{node['leaf_ip']}' ***")
 
 
-user "#{node['memsql']['srvc-acct']}" do
-  group node['memsql']['srvc-grp']
-  password node['memsql']['srvc-pass']
-  shell '/bin/bash'
-  manage_home true
-end
+# user "#{node['memsql']['srvc-acct']}" do
+  # group node['memsql']['srvc-grp']
+  # password node['memsql']['srvc-pass']
+  # shell '/bin/bash'
+  # manage_home true
+# end
 
 
 directory '/tmp/memsql' do
