@@ -98,19 +98,4 @@ end
    command "memsql-ops memsql-restart --all"
    not_if 'memsql-ops memsql-list |grep MASTER |grep -v "NOT RUNNING"'
  end
-
- 
-  
- template node['memsql']['ssh-priv-key-path'] do
-  source 'id_rsa.erb'
-  rsa_key = data_bag_item('anaconda_gecloud_privkey', 'private_key_dev', data_bag_secret)['key']
-  variables rsa_key: rsa_key
-  owner node['memsql']['srvc-grp']
-  group node['memsql']['srvc-grp']
-  mode '0600'
-  sensitive true
-  #action :nothing
-  #notifies :delete, "template[#{node['memsql']['memsql-ssh-priv-key-path']}]" # at the end of the recipe
-end
- 
  
