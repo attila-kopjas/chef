@@ -2,22 +2,20 @@
 # Cookbook Name:: memsql
 # Recipe:: master_install
 #
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+
 
 #include_recipe 's3_file'
 
+#sudo opsworks-agent-cli get_json -i
+#Chef::Log.info("*** The leaf IP is '#{node['leaf_ip']}' ***")
+
+
+user "#{node['memsql']['srvc-acct']}" do
+  group node['memsql']['srvc-grp']
+  password node['memsql']['srvc-pass']
+  shell '/bin/bash'
+  manage_home true
+end
 
 
 directory '/tmp/memsql' do
@@ -27,6 +25,17 @@ directory '/tmp/memsql' do
   recursive true
   #action :nothing
 end
+
+
+group "#{node['memsql']['srvc-grp']}"
+
+user "#{node['memsql']['srvc-acct']}" do
+  group node['memsql']['srvc-grp']
+  password node['memsql']['srvc-pass']
+  shell '/bin/bash'
+  manage_home true
+end
+
 
 execute 'download-memsql-packages' do
   cwd '/tmp/memsql'
@@ -41,7 +50,7 @@ execute 'download-memsql-packages' do
 end
 
 # Sample for using the s3_file resource
-# s3_file "/tmp/aen/#{node['memsql']['bin-file-name']}" do
+# s3_file "/tmp/memsql/#{node['memsql']['bin-file-name']}" do
   # remote_path node['memsql']['bin-s3-path']
   # mode '0644'
   # #action :nothing
@@ -90,4 +99,18 @@ end
    not_if 'memsql-ops memsql-list |grep MASTER |grep -v "NOT RUNNING"'
  end
 
+ 
+  
+ template node['memsql']['ssh-priv-key-path'] do
+  source 'id_rsa.erb'
+  rsa_key = data_bag_item('anaconda_gecloud_privkey', 'private_key_dev', data_bag_secret)['key']
+  variables rsa_key: rsa_key
+  owner node['memsql']['srvc-grp']
+  group node['memsql']['srvc-grp']
+  mode '0600'
+  sensitive true
+  #action :nothing
+  #notifies :delete, "template[#{node['memsql']['memsql-ssh-priv-key-path']}]" # at the end of the recipe
+end
+ 
  
