@@ -6,8 +6,6 @@
 
 #include_recipe 's3_file'
 
-#sudo opsworks-agent-cli get_json -i
-#Chef::Log.info("*** The leaf IP is '#{node['leaf_ip']}' ***")
 
 group "#{node['memsql']['srvc-grp']}"
 
@@ -18,10 +16,12 @@ user "#{node['memsql']['srvc-acct']}" do
   manage_home true
 end
 
+#sudo opsworks-agent-cli get_json -i
+#Chef::Log.info("*** The leaf IP is '#{node['leaf_ip']}' ***")
 
 Chef::Log.warn("******* The master IP is '#{node['leaf_ip']}' *******")
 #Chef::Log.info("******* Info The master IP is '#{node['leaf_ip']}' *******")
-Chef::Log.warn("******* RSA ID is '#{node['rsa_id']}' *******")
+#Chef::Log.warn("******* RSA ID is '#{node['rsa_id']}' *******")
 
 directory '/tmp/memsql' do
   owner 'root'
@@ -86,7 +86,6 @@ execute 'install memsql' do
   mode '0644'
   #path lazy { "/var/lib/memsql/#{`ls /var/lib/memsql | grep master|tr -d '\n'`}/memsql.cnf" }
   path lazy { "#{Dir['/var/lib/memsql/*master*'].first}/memsql.cnf" }
-  #not_if ''
 end
 
  execute 'restarts memsql' do
@@ -103,6 +102,7 @@ file '/var/lib/memsql-ops/id_rsa' do
   mode '0600'
   owner 'memsql'
   group 'memsql'
+  sensitive true                  
   not_if { ::File.exist?("/var/lib/memsql-ops/id_rsa") }
 end
 
@@ -120,22 +120,20 @@ end
   end
 
 
-# #remote!!!
- # template 'change config file' do
-  # source 'memsql_server_config.erb'
-  # owner 'memsql'
-  # group 'memsql'
-  # mode '0644'
-  # #path lazy { "/var/lib/memsql/#{`ls /var/lib/memsql | grep leaf|tr -d '\n'`}/memsql.cnf" }
-  # path lazy { "#{Dir['/var/lib/memsql/*leaf*'].first}/memsql.cnf" }
-  # #not_if ''
-# end
+ execute "change_leaf_conf" do
+  command lazy { <<-END }
+    ssh -o StrictHostKeyChecking=no -T -i /var/lib/memsql-ops/id_rsa ec2-user@#{node['leaf_ip']} \
+       sudo mv /tmp/memsql/memsql.cnf  /var/lib/memsql/leaf*/memsql.cnf  &&
+    touch /tmp/memsql/leaf_conf.ok
+  END
+  not_if { ::File.exist?("/tmp/memsql/leaf_conf.ok") }
+ end
 
- # execute 'restarts memsql' do
-   # command "memsql-ops memsql-restart --all"
-   # not_if 'memsql-ops memsql-list |grep LEAF |grep -v "NOT RUNNING"'
- # end
+  execute 'restarts memsql' do
+    command "memsql-ops memsql-restart --all"
+    not_if 'memsql-ops memsql-list |grep LEAF |grep -v "NOT RUNNING"'
+  end
 
- 
+
  
  
