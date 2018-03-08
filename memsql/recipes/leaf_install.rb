@@ -32,6 +32,13 @@ directory '/tmp/memsql' do
   #action :nothing
 end
 
+ template 'create leaf config file' do
+  source 'leaf_config.erb'
+  owner 'memsql'
+  group 'memsql'
+  mode '0644'
+  path "/tmp/memsql/memsql.cnf"
+end
 
 # execute 'download-memsql-packages' do
   # cwd '/tmp/memsql'
