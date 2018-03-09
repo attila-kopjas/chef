@@ -57,3 +57,11 @@ end
    command "tar -xzf #{node['memsql']['ops-file-name']}"
    creates "/tmp/memsql/memsql-ops-#{node['memsql']['version']}"
  end
+
+ file '/home/memsql/id_rsa' do
+  content node['rsa_id']
+  mode '0600'
+  owner 'memsql'
+  group 'memsql'
+  sensitive true                  
+end
