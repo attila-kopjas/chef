@@ -103,7 +103,7 @@ file '/var/lib/memsql-ops/id_rsa' do
   owner 'memsql'
   group 'memsql'
   sensitive true                  
-  not_if { ::File.exist?("/var/lib/memsql-ops/id_rsa") }
+  #not_if { ::File.exist?("/var/lib/memsql-ops/id_rsa") }
 end
 
 
