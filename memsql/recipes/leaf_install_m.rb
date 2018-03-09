@@ -46,7 +46,7 @@ end
  execute "agent deploy for leaf" do
   command lazy { <<-END }
     ssh -o StrictHostKeyChecking=no -T -i /home/memsql/id_rsa ec2-user@#{node['master_ip']} \
-    sudo memsql-ops agent-deploy -h #{node['leaf_ip']} -i /home/memsql/id_rsa -u ec2-user --allow-no-sudo  &&
+    sudo memsql-ops agent-deploy -h #{node[:ipaddress]} -i /var/lib/memsql-ops/id_rsa -u ec2-user --allow-no-sudo  &&
     touch /home/memsql/leaf_deploy.ok
   END
   not_if { ::File.exist?("/home/memsql/leaf_deploy.ok") }
@@ -62,7 +62,7 @@ end
  execute "deploy memsqld and start" do
   command lazy { <<-END }
     ssh -o StrictHostKeyChecking=no -T -i /home/memsql/id_rsa ec2-user@#{node['master_ip']} \
-    echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | grep #{node['leaf_ip']} | awk 'NR==1 { print $1}') -r leaf  &&
+    echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | grep #{node[:ipaddress]} | awk 'NR==1 { print $1}') -r leaf  &&
     touch /home/memsql/memsqld_deploy.ok
   END
   ignore_failure true
@@ -99,6 +99,6 @@ end
 
 
 execute 'starts memsql' do
-   command lazy { "memsql-ops memsql-start --no-prompt $(memsql-ops memsql-list | grep #{node['leaf_ip']} | awk 'NR==1 { print $1}')" }
+   command "memsql-ops memsql-start --no-prompt $(memsql-ops memsql-list | grep #{node[:ipaddress]} | awk 'NR==1 { print $1}')"
    #not_if 'memsql-ops memsql-list |grep LEAF |grep -v "NOT RUNNING"'
  end
