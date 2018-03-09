@@ -1,6 +1,6 @@
 name 'memsql'
-maintainer 'Jonathan Klinginsmith'
-maintainer_email 'jklingin@indiana.edu'
+maintainer 'Attila Kopjas'
+maintainer_email 'attila.kopjas@gmail.com'
 license 'Apache 2.0'
 description 'Installs/Configures MemSQL'
 version '0.1.0'
