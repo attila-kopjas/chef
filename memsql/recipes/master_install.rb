@@ -107,32 +107,32 @@ file '/var/lib/memsql-ops/id_rsa' do
 end
 
 
- execute 'agent deploy into leaf' do
-    command "memsql-ops agent-deploy -h #{node['leaf_ip']} -i /var/lib/memsql-ops/id_rsa -u ec2-user --allow-no-sudo"
-    not_if 'memsql-ops agent-list | grep FOLLOWER'
- end
+ # execute 'agent deploy into leaf' do
+ #    command "memsql-ops agent-deploy -h #{node['leaf_ip']} -i /var/lib/memsql-ops/id_rsa -u ec2-user --allow-no-sudo"
+ #    not_if 'memsql-ops agent-list | grep FOLLOWER'
+ # end
 
 
-  execute 'add leaf agent and start' do
-    command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | grep FOLLOWER | awk 'NR==1 { print $1}') -r leaf"
-    ignore_failure true
-    not_if 'memsql-ops memsql-list | grep LEAF'
-  end
+ #  execute 'add leaf agent and start' do
+ #    command "echo | memsql-ops memsql-deploy -a $(memsql-ops agent-list | grep FOLLOWER | awk 'NR==1 { print $1}') -r leaf"
+ #    ignore_failure true
+ #    not_if 'memsql-ops memsql-list | grep LEAF'
+ #  end
 
 
- execute "change_leaf_conf" do
-  command lazy { <<-END }
-    ssh -o StrictHostKeyChecking=no -T -i /var/lib/memsql-ops/id_rsa ec2-user@#{node['leaf_ip']} \
-       sudo mv /tmp/memsql/memsql.cnf  /var/lib/memsql/leaf*/memsql.cnf  &&
-    touch /tmp/memsql/leaf_conf.ok
-  END
-  not_if { ::File.exist?("/tmp/memsql/leaf_conf.ok") }
- end
+ # execute "change_leaf_conf" do
+ #  command lazy { <<-END }
+ #    ssh -o StrictHostKeyChecking=no -T -i /var/lib/memsql-ops/id_rsa ec2-user@#{node['leaf_ip']} \
+ #       sudo mv /tmp/memsql/memsql.cnf  /var/lib/memsql/leaf*/memsql.cnf  &&
+ #    touch /tmp/memsql/leaf_conf.ok
+ #  END
+ #  not_if { ::File.exist?("/tmp/memsql/leaf_conf.ok") }
+ # end
 
-  execute 'restarts memsql' do
-    command "memsql-ops memsql-restart --all"
-    not_if 'memsql-ops memsql-list |grep LEAF |grep -v "NOT RUNNING"'
-  end
+ #  execute 'restarts memsql' do
+ #    command "memsql-ops memsql-restart --all"
+ #    not_if 'memsql-ops memsql-list |grep LEAF |grep -v "NOT RUNNING"'
+ #  end
 
 
  
