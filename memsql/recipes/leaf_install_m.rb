@@ -46,7 +46,7 @@ end
  execute "agent deploy for leaf" do
   command lazy { <<-END }
     ssh -o StrictHostKeyChecking=no -T -i /home/memsql/id_rsa ec2-user@#{node['master_ip']} \
-    sudo memsql-ops agent-deploy -h #{node[:ipaddress]} -i /var/lib/memsql-ops/id_rsa -u ec2-user --allow-no-sudo  &&
+    sudo memsql-ops agent-deploy -h #{node[:ipaddress]} -i /home/ec2-user/id_rsa -u ec2-user --allow-no-sudo  &&
     touch /home/memsql/leaf_deploy.ok
   END
   not_if { ::File.exist?("/home/memsql/leaf_deploy.ok") }
