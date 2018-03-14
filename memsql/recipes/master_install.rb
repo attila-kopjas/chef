@@ -94,11 +94,11 @@ end
  end
  
  
-file '/home/ec2-user/id_rsa' do
+file '/home/memsql/id_rsa' do
   content node['rsa_id']
   mode '0600'
-  owner 'ec2-user'
-  group 'ec2-user'
+  owner 'memsql'
+  group 'memsql'
   sensitive true                  
 end
 
