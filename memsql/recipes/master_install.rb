@@ -94,18 +94,15 @@ end
  end
  
  
-# LEAF config
-
-
-file '/var/lib/memsql-ops/id_rsa' do
+file '/home/ec2-user/id_rsa' do
   content node['rsa_id']
   mode '0600'
-  owner 'memsql'
-  group 'memsql'
+  owner 'ec2-user'
+  group 'ec2-user'
   sensitive true                  
-  #not_if { ::File.exist?("/var/lib/memsql-ops/id_rsa") }
 end
 
+ # LEAF
 
  # execute 'agent deploy into leaf' do
  #    command "memsql-ops agent-deploy -h #{node['leaf_ip']} -i /var/lib/memsql-ops/id_rsa -u ec2-user --allow-no-sudo"
